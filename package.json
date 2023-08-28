@@ -2,6 +2,11 @@
   "name": "perseverant",
   "version": "0.1.0",
   "description": "A utility that perseveres",
+  "homepage": "https://github.com/JamesMcNee/perseverant",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JamesMcNee/perseverant"
+  },
   "main": "index.js",
   "scripts": {
     "build": "rm -rf ./build && tsc",
