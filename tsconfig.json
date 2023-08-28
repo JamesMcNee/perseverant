@@ -4,9 +4,15 @@
     "target": "es6",
     "declaration": true,
     "sourceMap": true,
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "baseUrl": "src",
+    "paths": {
+      "lib/*": [
+        "*"
+      ]
+    }
   },
   "include": [
-    "src/**/*"
+    "**/*"
   ]
 }
