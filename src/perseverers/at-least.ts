@@ -38,21 +38,12 @@ export class AtLeastAndAtMost extends PersevereFor {
         return this;
     }
 
-    public until<T>(arg: (() => Promise<T>) | Promise<T>): Until<T> {
-        if (arg instanceof Promise) {
-            return new UntilBetween<T>({
-                minMillis: this.options.minMillis,
-                maxMillis: this.options.maxMillis,
-                pollIntervalMillis: this.pollIntervalMillis,
-                testableFunc: () => arg
-            });
-        }
-
+    public until<T>(promissoryFunction: () => Promise<T>): Until<T> {
         return new UntilBetween<T>({
             minMillis: this.options.minMillis,
             maxMillis: this.options.maxMillis,
             pollIntervalMillis: this.pollIntervalMillis,
-            testableFunc: arg
+            testableFunc: promissoryFunction
         });
     }
 }

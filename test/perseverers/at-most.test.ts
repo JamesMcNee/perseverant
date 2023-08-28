@@ -10,7 +10,7 @@ describe('AtMost', () => {
 
             // When / Then
             await expect(async () =>
-                await new AtMost({ maxMillis: 1000 }).until(waitableFunc()).yieldsValue(5)
+                await new AtMost({ maxMillis: 1000 }).until(() => waitableFunc()).yieldsValue(5)
             ).not.toThrowError();
         });
 
