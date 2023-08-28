@@ -17,7 +17,7 @@ export abstract class PersevereFor {
      * @param value the value to wait for in the provided unit
      * @param unit the temporal unit to wait for (e.g. SECONDS)
      */
-    public withPollInterval(value: number, unit: TemporalUnit): this {
+    public withPollInterval(value: number, unit: TemporalUnit): Omit<this, 'withPollInterval'> {
         this.pollIntervalMillis = TemporalUnitConversion.asMillis(value, unit);
         return this;
     }
