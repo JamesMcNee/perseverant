@@ -58,14 +58,18 @@ export class UntilBetween<T> implements Until<T> {
     }) {
     }
 
-    public async yieldsValue(value: T): Promise<void> {
+    public async yieldsValue(expected: T): Promise<void> {
+        return this.satisfies(actual => actual === expected);
+    }
+
+    public async satisfies(predicate: (value: T) => boolean): Promise<void> {
         const mustBeAtLeastTime = new AssertableDate().plusMillis(this.options.minMillis);
         const maxFinishTime = new AssertableDate().plusMillis(this.options.maxMillis);
 
         do {
             const awaited = await this.options.testableFunc();
 
-            if (value === awaited) {
+            if (predicate(awaited)) {
                 if (mustBeAtLeastTime.isInTheFuture()) {
                     throw new Error('The provided function yielded the value before it was supposed to!');
                 }

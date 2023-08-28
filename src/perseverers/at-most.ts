@@ -40,13 +40,17 @@ export class AtMostUntil<T> implements Until<T> {
         testableFunc: () => Promise<T>
     }) {}
 
-    public async yieldsValue(value: T): Promise<void> {
+    public async yieldsValue(expected: T): Promise<void> {
+        return this.satisfies(actual => actual === expected);
+    }
+
+    public async satisfies(predicate: (value: T) => boolean): Promise<void> {
         const maxFinishTime = new AssertableDate().plusMillis(this.options.maxMillis);
 
         do {
             const awaited = await this.options.testableFunc();
 
-            if (value === awaited) {
+            if (predicate(awaited)) {
                 return;
             }
 

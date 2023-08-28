@@ -45,6 +45,48 @@ describe('AtMost', () => {
         });
     });
 
+    describe('satisfies', () => {
+        it('should return, when value is immediately yielded', async () => {
+            // Given
+            const waitableFunc = async () => 'Hello World!';
+
+            // When / Then
+            await expect(async () =>
+                await new AtMost({ maxMillis: 1000 }).until(() => waitableFunc()).satisfies(value => new RegExp('Hello.*').test(value))
+            ).not.toThrowError();
+        });
+
+        it('should return, when value is yielded within allotted time', async () => {
+            // Given
+            const waitableFunc = async (passAfter: AssertableDate) => {
+                if (passAfter.isInThePast()) {
+                    return 'Hello World!';
+                }
+
+                return 'Goodbye World!';
+            };
+
+            // When / Then
+            const passAfter = new AssertableDate().plusMillis(1000);
+
+            await expect(
+                new AtMost({ maxMillis: 3000 }).withPollInterval(50, 'MILLISECONDS').until(() => waitableFunc(passAfter)).satisfies(value => new RegExp('Hello.*').test(value))
+            ).resolves.not.toThrowError();
+        });
+
+        it('should reject, when value is not yielded within allotted time', async () => {
+            // Given
+            const waitableFunc = async () => {
+                return 'Goodbye World!';
+            };
+
+            // When / Then
+            await expect(
+                new AtMost({ maxMillis: 500 }).withPollInterval(50, 'MILLISECONDS').until(() => waitableFunc()).satisfies(value => new RegExp('Hello.*').test(value))
+            ).rejects.toThrowError('The provided function did not yield the expected value within the allotted time (500 millis)');
+        });
+    });
+
     describe('pollInterval', () => {
 
         it('throws an error, when poll interval greater than maxMillis', () => {

@@ -3,9 +3,15 @@ import {TemporalUnit, TemporalUnitConversion} from 'lib/temporal-unit';
 export interface Until<T> {
     /**
      * Persevere, polling the underlying promise function, until either a matching value is provided or the perseverance criteria is breached.
-     * @param value expected value that the underlying promise function should yield
+     * @param expected expected value that the underlying promise function should yield
      */
-    yieldsValue(value: T): Promise<void>
+    yieldsValue(expected: T): Promise<void>
+
+    /**
+     * Persevere, polling the underlying promise function, until either a value satisfying the predicate is provided or the perseverance criteria is breached.
+     * @param predicate that the underlying promise function should yield a value to satisfy
+     */
+    satisfies(predicate: (value: T) => boolean)
 }
 
 export abstract class PersevereFor {
