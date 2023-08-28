@@ -9,7 +9,7 @@
   },
   "main": "index.js",
   "scripts": {
-    "build": "rm -rf ./build && tsc",
+    "build": "rm -rf ./dist && tsc -p . && cp package*.json ./dist/ && cp README.md ./dist/",
     "test": "jest"
   },
   "keywords": [
