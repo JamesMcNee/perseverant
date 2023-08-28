@@ -1,11 +1,11 @@
 {
-  "name": "perseverejs",
+  "name": "persevere-js",
   "version": "0.2.0",
   "description": "A utility that perseveres",
-  "homepage": "https://github.com/JamesMcNee/perseverejs",
+  "homepage": "https://github.com/JamesMcNee/persevere-js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/JamesMcNee/perseverejs"
+    "url": "git+https://github.com/JamesMcNee/persevere-js"
   },
   "main": "index.js",
   "scripts": {
