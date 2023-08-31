@@ -11,7 +11,12 @@ export interface Until<T> {
      * Persevere, polling the underlying promise function, until either a value satisfying the predicate is provided or the perseverance criteria is breached.
      * @param predicate that the underlying promise function should yield a value to satisfy
      */
-    satisfies(predicate: (value: T) => boolean)
+    satisfies(predicate: (value: T) => boolean): Promise<void>
+
+    /**
+     * Persevere, polling the underlying promise function, until it stops throwing / rejecting or the perseverance criteria is breached.
+     */
+    noExceptions(): Promise<void>
 }
 
 export abstract class PersevereFor {

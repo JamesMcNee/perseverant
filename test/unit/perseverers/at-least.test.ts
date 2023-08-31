@@ -1,5 +1,6 @@
 import {AssertableDate} from 'lib/assertableDate';
 import {AtLeast} from 'lib/perseverers/at-least';
+import {sleep} from 'lib/utils';
 
 describe('AtLeast', () => {
 
@@ -43,6 +44,16 @@ describe('AtLeast', () => {
                 new AtLeast({ minMillis: 10 }).andAtMost(20, 'MILLISECONDS').until(() => waitableFunc()).yieldsValue(2)
             ).rejects.toThrowError('The provided function did not yield the expected value after the max allotted time (20 millis)');
         });
+
+        it('should reject after max time, when promise function takes longer than this to resolve', async () => {
+            // Given
+            const waitableFunc = () => sleep(10_000).then(() => 'success');
+
+            // When / Then
+            await expect(
+                new AtLeast({ minMillis: 10 }).andAtMost(20, 'MILLISECONDS').until(waitableFunc).yieldsValue('success')
+            ).rejects.toThrowError('The provided function did not yield the expected value after the max allotted time (20 millis)');
+        });
     });
 
     describe('satisfies', () => {
@@ -84,6 +95,68 @@ describe('AtLeast', () => {
             await expect(
                 new AtLeast({ minMillis: 10 }).andAtMost(20, 'MILLISECONDS').until(() => waitableFunc()).satisfies(value => new RegExp('Hello.*').test(value))
             ).rejects.toThrowError('The provided function did not yield the expected value after the max allotted time (20 millis)');
+        });
+
+        it('should reject after max time, when promise function takes longer than this to resolve', async () => {
+            // Given
+            const waitableFunc = () => sleep(10_000).then(() => 'success');
+
+            // When / Then
+            await expect(
+                new AtLeast({ minMillis: 10 }).andAtMost(20, 'MILLISECONDS').until(() => waitableFunc()).satisfies(value => value === 'success')
+            ).rejects.toThrowError('The provided function did not yield the expected value after the max allotted time (20 millis)');
+        });
+    });
+
+    describe('noExceptions', () => {
+        it('should reject, when value immediately satisfies the predicate', async () => {
+            // Given
+            const waitableFunc = async () => 'Hello World';
+
+            // When / Then
+            await expect(async () =>
+                await new AtLeast({ minMillis: 1000 }).andAtMost(2000, 'MILLISECONDS').until(() => waitableFunc()).noExceptions()
+            ).rejects.toThrowError('The provided function stopped throwing before it was supposed to!');
+        });
+
+        it('should return, when value is yielded between min and max allotted time', async () => {
+            // Given
+            const waitableFunc = async (passAfter: AssertableDate) => {
+                if (passAfter.isInThePast()) {
+                    return 'Hello World';
+                }
+
+                throw new Error('Not Ready!');
+            };
+
+            // When / Then
+            const passAfter = new AssertableDate().plusMillis(30);
+
+            await expect(
+                new AtLeast({ minMillis: 30 }).andAtMost(100, 'MILLISECONDS').withPollInterval(20, 'MILLISECONDS').until(() => waitableFunc(passAfter)).noExceptions()
+            ).resolves.not.toThrowError();
+        });
+
+        it('should reject, when value is not yielded within allotted time', async () => {
+            // Given
+            const waitableFunc = async () => {
+                throw new Error('Not Ready!');
+            };
+
+            // When / Then
+            await expect(
+                new AtLeast({ minMillis: 10 }).andAtMost(20, 'MILLISECONDS').until(() => waitableFunc()).noExceptions()
+            ).rejects.toThrowError('The provided function did not stop throwing within the allotted time (20 millis)');
+        });
+
+        it('should reject after max time, when promise function takes longer than this to resolve', async () => {
+            // Given
+            const waitableFunc = () => sleep(10_000).then(() => 'success');
+
+            // When / Then
+            await expect(
+                new AtLeast({ minMillis: 10 }).andAtMost(20, 'MILLISECONDS').until(() => waitableFunc()).noExceptions()
+            ).rejects.toThrowError('The provided function did not stop throwing within the allotted time (20 millis)');
         });
     });
 

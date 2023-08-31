@@ -67,9 +67,22 @@ export class UntilBetween<T> implements Until<T> {
         const maxFinishTime = new AssertableDate().plusMillis(this.options.maxMillis);
 
         do {
-            const awaited = await this.options.testableFunc();
+            const awaited = await Promise.race([
+                this.options.testableFunc().then(value => {
+                    return {
+                        key: 'RESOLVED',
+                        value
+                    };
+                }),
+                sleep(maxFinishTime.millisFromNow()).then(() => {
+                    return {
+                        key: 'TIMED_OUT',
+                        value: null
+                    };
+                })
+            ]);
 
-            if (predicate(awaited)) {
+            if (awaited.key === 'RESOLVED' && predicate(awaited.value)) {
                 if (mustBeAtLeastTime.isInTheFuture()) {
                     throw new Error('The provided function yielded the value before it was supposed to!');
                 }
@@ -81,6 +94,34 @@ export class UntilBetween<T> implements Until<T> {
         } while (maxFinishTime.isInTheFuture());
 
         throw new Error(`The provided function did not yield the expected value after the max allotted time (${this.options.maxMillis} millis)`);
+    }
+
+    public async noExceptions(): Promise<void> {
+        const mustBeAtLeastTime = new AssertableDate().plusMillis(this.options.minMillis);
+        const maxFinishTime = new AssertableDate().plusMillis(this.options.maxMillis);
+
+        do {
+            try {
+                await Promise.race([
+                    this.options.testableFunc(),
+                    sleep(maxFinishTime.millisFromNow()).then(() => {
+                        throw new Error('Times up!');
+                    })
+                ]);
+            } catch (e) {
+                await sleep(this.calculatePollInterval(maxFinishTime));
+
+                continue;
+            }
+
+            if (mustBeAtLeastTime.isInTheFuture()) {
+                throw new Error('The provided function stopped throwing before it was supposed to!');
+            }
+
+            return;
+        } while (maxFinishTime.isInTheFuture());
+
+        throw new Error(`The provided function did not stop throwing within the allotted time (${this.options.maxMillis} millis)`);
     }
 
     private calculatePollInterval(maxFinishTime: AssertableDate): number {

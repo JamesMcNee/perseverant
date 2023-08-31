@@ -48,9 +48,22 @@ export class AtMostUntil<T> implements Until<T> {
         const maxFinishTime = new AssertableDate().plusMillis(this.options.maxMillis);
 
         do {
-            const awaited = await this.options.testableFunc();
+            const awaited = await Promise.race([
+                this.options.testableFunc().then(value => {
+                    return {
+                        key: 'RESOLVED',
+                        value
+                    };
+                }),
+                sleep(maxFinishTime.millisFromNow()).then(() => {
+                    return {
+                        key: 'TIMED_OUT',
+                        value: null
+                    };
+                })
+            ]);
 
-            if (predicate(awaited)) {
+            if (awaited.key === 'RESOLVED' && predicate(awaited.value)) {
                 return;
             }
 
@@ -58,6 +71,25 @@ export class AtMostUntil<T> implements Until<T> {
         } while (maxFinishTime.isInTheFuture());
 
         throw new Error(`The provided function did not yield the expected value within the allotted time (${this.options.maxMillis} millis)`);
+    }
+
+    public async noExceptions(): Promise<void> {
+        const maxFinishTime = new AssertableDate().plusMillis(this.options.maxMillis);
+
+        do {
+            try {
+                await Promise.race([
+                    this.options.testableFunc(),
+                    sleep(maxFinishTime.millisFromNow()).then(() => {throw new Error('Times up!');})
+                ]);
+
+                return;
+            } catch (e) { /* continue waiting */ }
+
+            await sleep(this.calculatePollInterval(maxFinishTime));
+        } while (maxFinishTime.isInTheFuture());
+
+        throw new Error(`The provided function did not stop throwing within the allotted time (${this.options.maxMillis} millis)`);
     }
 
     private calculatePollInterval(maxFinishTime: AssertableDate): number {
