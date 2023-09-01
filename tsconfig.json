@@ -5,7 +5,7 @@
     "declaration": true,
     "sourceMap": true,
     "outDir": "./dist",
-    "baseUrl": "src",
+    "baseUrl": "lib",
     "paths": {
       "lib/*": [
         "*"
