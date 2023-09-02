@@ -59,6 +59,21 @@ In the above example, one of two things will happen:
 ## Usage
 By chaining temporal bindings and until conditions, you can craft powerful mechanisms to wait for asynchronous conditions to satisfy. 
 
+The entrypoint into the wonderful world of waiting is the `persevereFor` function (note: `persevere` is also available and is functionally identical).
+
+```typescript
+// Wait for at most 30 seconds, for there to be an order from bob in the databsse
+persevereFor()
+    .atMost(30, 'SECONDS')
+    .until(async () => {
+        return db.query('SELECT ORDER_ID, CUSTOMER_ID FROM CUSTOMER_ORDERS');
+    })
+    .satisfies((customerOrders: { orderId: string, customerId: string}[]) => {
+        return customerOrders
+            .find(order => order.customerId = 'bob') != undefined;
+    })
+```
+
 ### Temporal Bindings
 You can utilise the following temporal bindings for your persevere functions:
 
