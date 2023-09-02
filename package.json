@@ -7,6 +7,10 @@
     "type": "git",
     "url": "git+https://github.com/JamesMcNee/persevere-js"
   },
+  "bugs": {
+    "url": "https://github.com/JamesMcNee/persevere-js/issues/new",
+    "email": "james@jamesmcnee.co.uk"
+  },
   "main": "index.js",
   "scripts": {
     "build": "rm -rf ./dist && tsc --project tsconfig.prod.json && tsc-alias --project tsconfig.prod.json && cp package*.json ./dist/ && cp README.md ./dist/",
@@ -19,6 +23,7 @@
     "until"
   ],
   "author": "James McNee",
+  "license": "MIT",
   "devDependencies": {
     "@types/jest": "^29.5.4",
     "@types/node": "^20.5.7",
