@@ -11,4 +11,6 @@ RUN npm install
 RUN npm run build
 RUN npm run test
 
+WORKDIR /usr/local/perseverant/dist
+
 ENTRYPOINT ["npm", "publish"]
