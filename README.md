@@ -7,19 +7,25 @@
     <img alt="Version" src="https://badge.fury.io/js/persevere-js.svg" />
   </a>
   <a href="https://github.com/JamesMcNee/persevere-js#readme" target="_blank">
-    <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
+    <img alt="Documentation" src="https://img.shields.io/badge/Documentation-yes-brightgreen.svg" />
   </a>
   <a href="https://github.com/JamesMcNee/persevere-js/graphs/commit-activity" target="_blank">
     <img alt="Maintenance" src="https://img.shields.io/badge/Maintained%3F-yes-green.svg" />
+  </a> 
+  <a href="https://github.com/JamesMcNee/persevere-js/blob/master/LICENCE.md" target="_blank">
+    <img alt="Licence" src="https://img.shields.io/github/license/JamesMcNee/persevere-js" />
+  </a>
+  <a href="#" target="_blank">
+    <img alt="Licence" src="https://img.shields.io/badge/Dependencies-None-blue" />
   </a>
 </p>
 
 ## Description
-A small utility that provides an easy-to-read syntax for awaiting on a condition to be satisfied.
+A small utility that provides an easy-to-read syntax for awaiting on a condition to be satisfied. This makes testing asynchronous logic a breeze! 
 
 Heavily inspired by [Awaitility](http://www.awaitility.org/) which is a Java utility aimed at testing asynchronous systems.
 
-## Example
+### Example
 This utility could be used in both production and test code, but primarily use cases tend towards the latter. 
 
 For this example, imagine a simple backend for a local book store. The developer of the system wants to check the asynchronous 'real time' stocking system, which utilises a message queue. The flow for this is as follows:
@@ -41,7 +47,7 @@ describe('Stocking Tests', () => {
         bookService.addPurchaseToQueue(book)
         
         // Then
-        persevere().atMost(10, 'SECONDS').until(() => bookRepository.getStockCountFor(book)).yieldsValue(0)
+        persevereFor().atMost(10, 'SECONDS').until(() => bookRepository.getStockCountFor(book)).yieldsValue(0)
     })
 })
 ```
@@ -49,5 +55,26 @@ describe('Stocking Tests', () => {
 In the above example, one of two things will happen:
 1. The stock count will become 0 for the book within the allotted 10-second period.
 2. The purchase message is never consumer, or takes longer than 10 seconds to be delivered and an exception will be thrown.
+
+## Usage
+By chaining temporal bindings and until conditions, you can craft powerful mechanisms to wait for asynchronous conditions to satisfy. 
+
+### Temporal Bindings
+You can utilise the following temporal bindings for your persevere functions:
+
+- `atMost` - Wait for at most the specified time for the condition to be met.
+- `atLeast` - Expect that at least the specified time has passed before the condition is met. (Note: Must also provide an upper temporal bound).
+
+### Until Conditions
+You can utilise the following until conditions for determining success
+
+- `yieldsValue` - Stop waiting once the underlying promissory function yields the value specified.
+- `satisfies` - Stop waiting once the underlying promissory function satisfies the provided predicate.
+- `noExceptions` - Stop waiting as soon as the underlying promissory function resolves (doesn't reject/throw).
+
+## Licence
+Copyright (c) 2023 James McNee Licensed under the MIT license.
+
+---
 
 _This README was generated with ❤️ by [readme-md-generator](https://github.com/kefranabg/readme-md-generator)_
