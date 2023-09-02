@@ -16,7 +16,7 @@
     <img alt="Licence" src="https://img.shields.io/github/license/JamesMcNee/persevere-js" />
   </a>
   <a href="#" target="_blank">
-    <img alt="Licence" src="https://img.shields.io/badge/Dependencies-None-blue" />
+    <img alt="Zero Runtime Dependencies" src="https://img.shields.io/badge/Runtime%20Dependencies-None-blue" />
   </a>
 </p>
 
