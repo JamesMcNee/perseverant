@@ -48,5 +48,11 @@ describe('Temporal Unit', () => {
                 });
             }
         }
+
+        it('should throw error when passed an invalid unit', () => {
+            expect(() => {
+                TemporalUnitConversion.asMillis(1, 'BILLION_YEARS' as TemporalUnit);
+            }).toThrowError('Unknown temporal unit: BILLION_YEARS');
+        });
     });
 });

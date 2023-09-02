@@ -21,7 +21,7 @@ export class TemporalUnitConversion {
         case 'HOURS':
             return value * 60 * 60 * 1000;
         default:
-            throw new Error('Unknown unit: ' + unit);
+            throw new Error('Unknown temporal unit: ' + unit);
         }
     }
 }

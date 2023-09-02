@@ -173,4 +173,15 @@ describe('AtLeast', () => {
             ).toThrowError('The poll interval must be less than the min allowed wait time of 500ms');
         });
     });
+
+    it('andAtMost should throw if the time provided is less than the minimum', () => {
+        // Given
+        const minMillis = 1000;
+        const maxMillis = 500;
+
+        // When / Then
+        expect(() => {
+            new AtLeast({ minMillis }).andAtMost(maxMillis, 'MILLISECONDS');
+        }).toThrowError('The maximum wait time must not be more than the minimum of: 1000ms');
+    });
 });
