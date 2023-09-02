@@ -1,5 +1,5 @@
 import {sleep} from 'lib/utils';
-import {PersevereFor, Until} from 'lib/perseverers/persevere-for';
+import {TemporalBinding, Until} from 'lib/perseverers/temporal-binding';
 import {TemporalUnit, TemporalUnitConversion} from 'lib/temporal-unit';
 import {AssertableDate} from 'lib/assertableDate';
 
@@ -10,15 +10,28 @@ export class AtLeast {
     }) {
     }
 
-    public andAtMost(value: number, unit: TemporalUnit): PersevereFor {
+    /**
+     * Sets the maximum time to persevere
+     *
+     * @param value the numeric value to wait
+     * @param unit the temporal unit that the value denotes
+     * @return TemporalBinding a temporally bound class ready for further configuration
+     */
+    public andAtMost(value: number, unit: TemporalUnit): TemporalBinding {
+        const maxMillis = TemporalUnitConversion.asMillis(value, unit);
+
+        if (maxMillis < this.options.minMillis) {
+            throw new Error(`The maximum wait time must not be more than the minimum of: ${this.options.minMillis}ms`);
+        }
+
         return new AtLeastAndAtMost({
             minMillis: this.options.minMillis,
-            maxMillis: TemporalUnitConversion.asMillis(value, unit)
+            maxMillis: maxMillis
         });
     }
 }
 
-export class AtLeastAndAtMost extends PersevereFor {
+export class AtLeastAndAtMost extends TemporalBinding {
 
     constructor(private options: {
         minMillis: number,
@@ -28,6 +41,14 @@ export class AtLeastAndAtMost extends PersevereFor {
         this.pollIntervalMillis = this.options.minMillis / 5;
     }
 
+    /**
+     * Sets the interval to wait between polling the function to check its value / state.
+     *
+     * The poll interval must **NOT** be more than the minimum allowed wait time, otherwise an error will be thrown.
+     *
+     * @param value the value to wait for in the provided unit
+     * @param unit the temporal unit to wait for (e.g. SECONDS)
+     */
     public override withPollInterval(value: number, unit: TemporalUnit): this {
         super.withPollInterval(value, unit);
 
@@ -38,6 +59,10 @@ export class AtLeastAndAtMost extends PersevereFor {
         return this;
     }
 
+    /**
+     * Persevere until the provided promise yielding function satisfies the matching criteria (applied in next chained call).
+     * @param promissoryFunction to poll
+     */
     public until<T>(promissoryFunction: () => Promise<T>): Until<T> {
         return new UntilBetween<T>({
             minMillis: this.options.minMillis,
@@ -58,10 +83,18 @@ export class UntilBetween<T> implements Until<T> {
     }) {
     }
 
+    /**
+     * Persevere, polling the underlying promise function, until either a matching value is provided or the perseverance criteria is breached.
+     * @param expected expected value that the underlying promise function should yield
+     */
     public async yieldsValue(expected: T): Promise<void> {
         return this.satisfies(actual => actual === expected);
     }
 
+    /**
+     * Persevere, polling the underlying promise function, until either a value satisfying the predicate is provided or the perseverance criteria is breached.
+     * @param predicate that the underlying promise function should yield a value to satisfy
+     */
     public async satisfies(predicate: (value: T) => boolean): Promise<void> {
         const mustBeAtLeastTime = new AssertableDate().plusMillis(this.options.minMillis);
         const maxFinishTime = new AssertableDate().plusMillis(this.options.maxMillis);
@@ -96,6 +129,9 @@ export class UntilBetween<T> implements Until<T> {
         throw new Error(`The provided function did not yield the expected value after the max allotted time (${this.options.maxMillis} millis)`);
     }
 
+    /**
+     * Persevere, polling the underlying promise function, until it stops throwing / rejecting or the perseverance criteria is breached.
+     */
     public async noExceptions(): Promise<void> {
         const mustBeAtLeastTime = new AssertableDate().plusMillis(this.options.minMillis);
         const maxFinishTime = new AssertableDate().plusMillis(this.options.maxMillis);

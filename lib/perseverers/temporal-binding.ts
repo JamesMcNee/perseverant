@@ -19,7 +19,7 @@ export interface Until<T> {
     noExceptions(): Promise<void>
 }
 
-export abstract class PersevereFor {
+export abstract class TemporalBinding {
 
     protected pollIntervalMillis: number;
 

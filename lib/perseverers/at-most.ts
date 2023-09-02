@@ -1,9 +1,9 @@
 import {sleep} from 'lib/utils';
-import {PersevereFor, Until} from 'lib/perseverers/persevere-for';
+import {TemporalBinding, Until} from 'lib/perseverers/temporal-binding';
 import {TemporalUnit} from 'lib/temporal-unit';
 import {AssertableDate} from 'lib/assertableDate';
 
-export class AtMost extends PersevereFor {
+export class AtMost extends TemporalBinding {
 
     constructor(private options: {
         maxMillis: number
@@ -12,6 +12,14 @@ export class AtMost extends PersevereFor {
         this.pollIntervalMillis = this.options.maxMillis / 5;
     }
 
+    /**
+     * Sets the interval to wait between polling the function to check its value / state.
+     *
+     * The poll interval must **NOT** be greater than the maximum allowed wait time, otherwise an error will be thrown.
+     *
+     * @param value the value to wait for in the provided unit
+     * @param unit the temporal unit to wait for (e.g. SECONDS)
+     */
     public override withPollInterval(value: number, unit: TemporalUnit): this {
         super.withPollInterval(value, unit);
 
@@ -22,6 +30,10 @@ export class AtMost extends PersevereFor {
         return this;
     }
 
+    /**
+     * Persevere until the provided promise yielding function satisfies the matching criteria (applied in next chained call).
+     * @param promissoryFunction to poll
+     */
     public until<T>(promissoryFunction: () => Promise<T>): Until<T> {
         return new AtMostUntil<T>({
             maxMillis: this.options.maxMillis,
@@ -40,10 +52,18 @@ export class AtMostUntil<T> implements Until<T> {
         testableFunc: () => Promise<T>
     }) {}
 
+    /**
+     * Persevere, polling the underlying promise function, until either a matching value is provided or the perseverance criteria is breached.
+     * @param expected expected value that the underlying promise function should yield
+     */
     public async yieldsValue(expected: T): Promise<void> {
         return this.satisfies(actual => actual === expected);
     }
 
+    /**
+     * Persevere, polling the underlying promise function, until either a value satisfying the predicate is provided or the perseverance criteria is breached.
+     * @param predicate that the underlying promise function should yield a value to satisfy
+     */
     public async satisfies(predicate: (value: T) => boolean): Promise<void> {
         const maxFinishTime = new AssertableDate().plusMillis(this.options.maxMillis);
 
@@ -73,6 +93,9 @@ export class AtMostUntil<T> implements Until<T> {
         throw new Error(`The provided function did not yield the expected value within the allotted time (${this.options.maxMillis} millis)`);
     }
 
+    /**
+     * Persevere, polling the underlying promise function, until it stops throwing / rejecting or the perseverance criteria is breached.
+     */
     public async noExceptions(): Promise<void> {
         const maxFinishTime = new AssertableDate().plusMillis(this.options.maxMillis);
 
