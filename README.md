@@ -37,8 +37,9 @@ For this example, imagine a simple backend for a local book store. The developer
 The developer sets up the following simple test for this, thanks to `PersevereJS` 🚀
 
 ```typescript
+import { persevereFor } from "persevere-js/persevere";
+
 describe('Stocking Tests', () => {
-    
     it('should decrement stock quantity, when a book is purchased', () => {
         // Given
         const book = new Book('Harry Potter and the Philosophers Stone')
