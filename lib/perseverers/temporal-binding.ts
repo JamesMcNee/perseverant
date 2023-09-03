@@ -4,19 +4,22 @@ export interface Until<T> {
     /**
      * Persevere, polling the underlying promise function, until either a matching value is provided or the perseverance criteria is breached.
      * @param expected expected value that the underlying promise function should yield
+     * @return the value that the underlying promise yields
      */
-    yieldsValue(expected: T): Promise<void>
+    yieldsValue(expected: T): Promise<T>
 
     /**
      * Persevere, polling the underlying promise function, until either a value satisfying the predicate is provided or the perseverance criteria is breached.
      * @param predicate that the underlying promise function should yield a value to satisfy
+     * @return the value that the underlying promise yields
      */
-    satisfies(predicate: (value: T) => boolean): Promise<void>
+    satisfies(predicate: (value: T) => boolean): Promise<T>
 
     /**
      * Persevere, polling the underlying promise function, until it stops throwing / rejecting or the perseverance criteria is breached.
+     * @return the value that the underlying promise yields
      */
-    noExceptions(): Promise<void>
+    noExceptions(): Promise<T>
 }
 
 export abstract class TemporalBinding {

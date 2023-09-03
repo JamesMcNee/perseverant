@@ -55,16 +55,18 @@ export class AtMostUntil<T> implements Until<T> {
     /**
      * Persevere, polling the underlying promise function, until either a matching value is provided or the perseverance criteria is breached.
      * @param expected expected value that the underlying promise function should yield
+     * @return the value that the underlying promise yields
      */
-    public async yieldsValue(expected: T): Promise<void> {
+    public async yieldsValue(expected: T): Promise<T> {
         return this.satisfies(actual => actual === expected);
     }
 
     /**
      * Persevere, polling the underlying promise function, until either a value satisfying the predicate is provided or the perseverance criteria is breached.
      * @param predicate that the underlying promise function should yield a value to satisfy
+     * @return the value that the underlying promise yields
      */
-    public async satisfies(predicate: (value: T) => boolean): Promise<void> {
+    public async satisfies(predicate: (value: T) => boolean): Promise<T> {
         const maxFinishTime = new AssertableDate().plusMillis(this.options.maxMillis);
 
         do {
@@ -84,7 +86,7 @@ export class AtMostUntil<T> implements Until<T> {
             ]);
 
             if (awaited.key === 'RESOLVED' && predicate(awaited.value)) {
-                return;
+                return awaited.value;
             }
 
             await sleep(this.calculatePollInterval(maxFinishTime));
@@ -95,18 +97,17 @@ export class AtMostUntil<T> implements Until<T> {
 
     /**
      * Persevere, polling the underlying promise function, until it stops throwing / rejecting or the perseverance criteria is breached.
+     * @return the value that the underlying promise yields
      */
-    public async noExceptions(): Promise<void> {
+    public async noExceptions(): Promise<T> {
         const maxFinishTime = new AssertableDate().plusMillis(this.options.maxMillis);
 
         do {
             try {
-                await Promise.race([
+                return await Promise.race([
                     this.options.testableFunc(),
                     sleep(maxFinishTime.millisFromNow()).then(() => {throw new Error('Times up!');})
                 ]);
-
-                return;
             } catch (e) { /* continue waiting */ }
 
             await sleep(this.calculatePollInterval(maxFinishTime));

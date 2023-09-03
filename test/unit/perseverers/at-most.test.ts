@@ -17,9 +17,10 @@ describe('AtMost', () => {
 
         it('should return, when value is yielded within allotted time', async () => {
             // Given
+            const successValue = 2;
             const waitableFunc = async (passAfter: AssertableDate) => {
                 if (passAfter.isInThePast()) {
-                    return 2;
+                    return successValue;
                 }
 
                 return 0;
@@ -29,8 +30,8 @@ describe('AtMost', () => {
             const passAfter = new AssertableDate().plusMillis(1000);
 
             await expect(
-                new AtMost({ maxMillis: 3000 }).withPollInterval(50, 'MILLISECONDS').until(() => waitableFunc(passAfter)).yieldsValue(2)
-            ).resolves.not.toThrowError();
+                new AtMost({ maxMillis: 3000 }).withPollInterval(50, 'MILLISECONDS').until(() => waitableFunc(passAfter)).yieldsValue(successValue)
+            ).resolves.toEqual(successValue);
         });
 
         it('should reject, when value is not yielded within allotted time', async () => {
@@ -69,9 +70,10 @@ describe('AtMost', () => {
 
         it('should return, when value is yielded within allotted time', async () => {
             // Given
+            const successValue: string = 'Hello World';
             const waitableFunc = async (passAfter: AssertableDate) => {
                 if (passAfter.isInThePast()) {
-                    return 'Hello World!';
+                    return successValue;
                 }
 
                 return 'Goodbye World!';
@@ -82,7 +84,7 @@ describe('AtMost', () => {
 
             await expect(
                 new AtMost({ maxMillis: 3000 }).withPollInterval(50, 'MILLISECONDS').until(() => waitableFunc(passAfter)).satisfies(value => new RegExp('Hello.*').test(value))
-            ).resolves.not.toThrowError();
+            ).resolves.toEqual(successValue);
         });
 
         it('should reject, when value is not yielded within allotted time', async () => {
@@ -121,9 +123,10 @@ describe('AtMost', () => {
 
         it('should return, when value is yielded within allotted time', async () => {
             // Given
+            const successValue: string = 'Hello World';
             const waitableFunc = async (passAfter: AssertableDate) => {
                 if (passAfter.isInThePast()) {
-                    return 'Hello World!';
+                    return successValue;
                 }
 
                 throw new Error('Not Ready!');
@@ -134,7 +137,7 @@ describe('AtMost', () => {
 
             await expect(
                 new AtMost({ maxMillis: 3000 }).withPollInterval(50, 'MILLISECONDS').until(() => waitableFunc(passAfter)).noExceptions()
-            ).resolves.not.toThrowError();
+            ).resolves.toEqual(successValue);
         });
 
         it('should reject, when value is not yielded within allotted time', async () => {

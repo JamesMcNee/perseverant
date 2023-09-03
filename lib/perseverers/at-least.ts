@@ -86,16 +86,18 @@ export class UntilBetween<T> implements Until<T> {
     /**
      * Persevere, polling the underlying promise function, until either a matching value is provided or the perseverance criteria is breached.
      * @param expected expected value that the underlying promise function should yield
+     * @return the value that the underlying promise yields
      */
-    public async yieldsValue(expected: T): Promise<void> {
+    public async yieldsValue(expected: T): Promise<T> {
         return this.satisfies(actual => actual === expected);
     }
 
     /**
      * Persevere, polling the underlying promise function, until either a value satisfying the predicate is provided or the perseverance criteria is breached.
      * @param predicate that the underlying promise function should yield a value to satisfy
+     * @return the value that the underlying promise yields
      */
-    public async satisfies(predicate: (value: T) => boolean): Promise<void> {
+    public async satisfies(predicate: (value: T) => boolean): Promise<T> {
         const mustBeAtLeastTime = new AssertableDate().plusMillis(this.options.minMillis);
         const maxFinishTime = new AssertableDate().plusMillis(this.options.maxMillis);
 
@@ -120,7 +122,7 @@ export class UntilBetween<T> implements Until<T> {
                     throw new Error('The provided function yielded the value before it was supposed to!');
                 }
 
-                return;
+                return awaited.value;
             }
 
             await sleep(this.calculatePollInterval(maxFinishTime));
@@ -131,14 +133,16 @@ export class UntilBetween<T> implements Until<T> {
 
     /**
      * Persevere, polling the underlying promise function, until it stops throwing / rejecting or the perseverance criteria is breached.
+     * @return the value that the underlying promise yields
      */
-    public async noExceptions(): Promise<void> {
+    public async noExceptions(): Promise<T> {
         const mustBeAtLeastTime = new AssertableDate().plusMillis(this.options.minMillis);
         const maxFinishTime = new AssertableDate().plusMillis(this.options.maxMillis);
 
         do {
+            let value: T;
             try {
-                await Promise.race([
+                value = await Promise.race([
                     this.options.testableFunc(),
                     sleep(maxFinishTime.millisFromNow()).then(() => {
                         throw new Error('Times up!');
@@ -154,7 +158,7 @@ export class UntilBetween<T> implements Until<T> {
                 throw new Error('The provided function stopped throwing before it was supposed to!');
             }
 
-            return;
+            return value;
         } while (maxFinishTime.isInTheFuture());
 
         throw new Error(`The provided function did not stop throwing within the allotted time (${this.options.maxMillis} millis)`);
