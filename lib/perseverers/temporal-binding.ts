@@ -22,12 +22,15 @@ export interface Until<T> {
     noExceptions(): Promise<T>
 }
 
-export abstract class TemporalBinding {
+export type ErrorHandler<T> = <E extends Error>(originalMessage: string, lastResolvedValue?: T) => E
+export abstract class TemporalBinding<T> {
 
     protected pollIntervalMillis: number;
+    protected errorHandler: ErrorHandler<T>;
 
     /**
      * Sets the interval to wait between polling the function to check its value / state.
+     *
      * @param value the value to wait for in the provided unit
      * @param unit the temporal unit to wait for (e.g. SECONDS)
      */
@@ -35,5 +38,17 @@ export abstract class TemporalBinding {
         this.pollIntervalMillis = TemporalUnitConversion.asMillis(value, unit);
         return this;
     }
-    abstract until<T>(promissoryFunction: () => Promise<T>): Until<T>;
+
+    /**
+     * Sets an error handler that will be called if the promissory function does not satisfy the provided constraints.
+     *
+     * @param handler to call to build an error, will be passed the last resolved value if available
+     */
+    public withErrorHandler(handler: ErrorHandler<T>): Omit<this, 'withErrorHandler'> {
+        this.errorHandler = handler;
+        return this;
+
+    }
+
+    abstract until(promissoryFunction: () => Promise<T>): Until<T>;
 }

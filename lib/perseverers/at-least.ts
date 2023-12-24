@@ -1,9 +1,9 @@
 import {sleep} from 'lib/utils';
-import {TemporalBinding, Until} from 'lib/perseverers/temporal-binding';
+import {ErrorHandler, TemporalBinding, Until} from 'lib/perseverers/temporal-binding';
 import {TemporalUnit, TemporalUnitConversion} from 'lib/temporal-unit';
 import {AssertableDate} from 'lib/assertableDate';
 
-export class AtLeast {
+export class AtLeast<T> {
 
     constructor(private options: {
         minMillis: number
@@ -17,7 +17,7 @@ export class AtLeast {
      * @param unit the temporal unit that the value denotes
      * @return TemporalBinding a temporally bound class ready for further configuration
      */
-    public andAtMost(value: number, unit: TemporalUnit): TemporalBinding {
+    public andAtMost(value: number, unit: TemporalUnit): TemporalBinding<T> {
         const maxMillis = TemporalUnitConversion.asMillis(value, unit);
 
         if (maxMillis < this.options.minMillis) {
@@ -31,7 +31,7 @@ export class AtLeast {
     }
 }
 
-export class AtLeastAndAtMost extends TemporalBinding {
+export class AtLeastAndAtMost<T> extends TemporalBinding<T> {
 
     constructor(private options: {
         minMillis: number,
@@ -49,7 +49,7 @@ export class AtLeastAndAtMost extends TemporalBinding {
      * @param value the value to wait for in the provided unit
      * @param unit the temporal unit to wait for (e.g. SECONDS)
      */
-    public override withPollInterval(value: number, unit: TemporalUnit): this {
+    public override withPollInterval(value: number, unit: TemporalUnit): Omit<this, 'withPollInterval'> {
         super.withPollInterval(value, unit);
 
         if (this.options.minMillis <= this.pollIntervalMillis) {
@@ -79,6 +79,7 @@ export class UntilBetween<T> implements Until<T> {
         minMillis: number
         maxMillis: number
         pollIntervalMillis: number
+        errorHandler?: ErrorHandler<T>
         testableFunc: () => Promise<T>
     }) {
     }
@@ -101,6 +102,7 @@ export class UntilBetween<T> implements Until<T> {
         const mustBeAtLeastTime = new AssertableDate().plusMillis(this.options.minMillis);
         const maxFinishTime = new AssertableDate().plusMillis(this.options.maxMillis);
 
+        let latestValue: T ;
         do {
             const awaited = await Promise.race([
                 this.options.testableFunc().then(value => {
@@ -117,9 +119,17 @@ export class UntilBetween<T> implements Until<T> {
                 })
             ]);
 
+            latestValue = awaited.value;
+
             if (awaited.key === 'RESOLVED' && predicate(awaited.value)) {
                 if (mustBeAtLeastTime.isInTheFuture()) {
-                    throw new Error('The provided function yielded the value before it was supposed to!');
+                    const errorMessage = 'The provided function yielded the value before it was supposed to!';
+
+                    if (this.options.errorHandler) {
+                        throw this.options.errorHandler(errorMessage, latestValue);
+                    }
+
+                    throw new Error(errorMessage);
                 }
 
                 return awaited.value;
@@ -128,7 +138,13 @@ export class UntilBetween<T> implements Until<T> {
             await sleep(this.calculatePollInterval(maxFinishTime));
         } while (maxFinishTime.isInTheFuture());
 
-        throw new Error(`The provided function did not yield the expected value after the max allotted time (${this.options.maxMillis} millis)`);
+        const errorMessage = `The provided function did not yield the expected value after the max allotted time (${this.options.maxMillis} millis)`;
+
+        if (this.options.errorHandler) {
+            throw this.options.errorHandler(errorMessage, latestValue);
+        }
+
+        throw new Error(errorMessage);
     }
 
     /**

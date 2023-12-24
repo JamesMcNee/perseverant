@@ -1,9 +1,9 @@
 import {sleep} from 'lib/utils';
-import {TemporalBinding, Until} from 'lib/perseverers/temporal-binding';
+import {ErrorHandler, TemporalBinding, Until} from 'lib/perseverers/temporal-binding';
 import {TemporalUnit} from 'lib/temporal-unit';
 import {AssertableDate} from 'lib/assertableDate';
 
-export class AtMost extends TemporalBinding {
+export class AtMost<T> extends TemporalBinding<T> {
 
     constructor(private options: {
         maxMillis: number
@@ -20,7 +20,7 @@ export class AtMost extends TemporalBinding {
      * @param value the value to wait for in the provided unit
      * @param unit the temporal unit to wait for (e.g. SECONDS)
      */
-    public override withPollInterval(value: number, unit: TemporalUnit): this {
+    public override withPollInterval(value: number, unit: TemporalUnit): Omit<this, 'withPollInterval'> {
         super.withPollInterval(value, unit);
 
         if (this.options.maxMillis <= this.pollIntervalMillis) {
@@ -34,10 +34,11 @@ export class AtMost extends TemporalBinding {
      * Persevere until the provided promise yielding function satisfies the matching criteria (applied in next chained call).
      * @param promissoryFunction to poll
      */
-    public until<T>(promissoryFunction: () => Promise<T>): Until<T> {
+    public until(promissoryFunction: () => Promise<T>): Until<T> {
         return new AtMostUntil<T>({
             maxMillis: this.options.maxMillis,
             pollIntervalMillis: this.pollIntervalMillis,
+            errorHandler: this.errorHandler,
             testableFunc: promissoryFunction
         });
     }
@@ -49,6 +50,7 @@ export class AtMostUntil<T> implements Until<T> {
     constructor(private readonly options: {
         maxMillis: number
         pollIntervalMillis: number
+        errorHandler?: ErrorHandler<T>
         testableFunc: () => Promise<T>
     }) {}
 
@@ -69,6 +71,7 @@ export class AtMostUntil<T> implements Until<T> {
     public async satisfies(predicate: (value: T) => boolean): Promise<T> {
         const maxFinishTime = new AssertableDate().plusMillis(this.options.maxMillis);
 
+        let latestValue: T ;
         do {
             const awaited = await Promise.race([
                 this.options.testableFunc().then(value => {
@@ -80,10 +83,12 @@ export class AtMostUntil<T> implements Until<T> {
                 sleep(maxFinishTime.millisFromNow()).then(() => {
                     return {
                         key: 'TIMED_OUT',
-                        value: null
+                        value: undefined
                     };
                 })
             ]);
+
+            latestValue = awaited.value;
 
             if (awaited.key === 'RESOLVED' && predicate(awaited.value)) {
                 return awaited.value;
@@ -92,7 +97,13 @@ export class AtMostUntil<T> implements Until<T> {
             await sleep(this.calculatePollInterval(maxFinishTime));
         } while (maxFinishTime.isInTheFuture());
 
-        throw new Error(`The provided function did not yield the expected value within the allotted time (${this.options.maxMillis} millis)`);
+        const errorMessage = `The provided function did not yield the expected value within the allotted time (${this.options.maxMillis} millis)`;
+
+        if (this.options.errorHandler) {
+            throw this.options.errorHandler(errorMessage, latestValue);
+        }
+
+        throw new Error(errorMessage);
     }
 
     /**
@@ -113,7 +124,13 @@ export class AtMostUntil<T> implements Until<T> {
             await sleep(this.calculatePollInterval(maxFinishTime));
         } while (maxFinishTime.isInTheFuture());
 
-        throw new Error(`The provided function did not stop throwing within the allotted time (${this.options.maxMillis} millis)`);
+        const errorMessage = `The provided function did not stop throwing within the allotted time (${this.options.maxMillis} millis)`;
+
+        if (this.options.errorHandler) {
+            throw this.options.errorHandler(errorMessage);
+        }
+
+        throw new Error(errorMessage);
     }
 
     private calculatePollInterval(maxFinishTime: AssertableDate): number {
