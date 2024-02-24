@@ -39,7 +39,7 @@ The developer sets up the following simple test for this, thanks to `PersevereJS
 ```typescript
 import { persevereFor } from "persevere-js";
 
-describe('Stocking Tests', () => {
+describe('Stocking Tests', async () => {
     it('should decrement stock quantity, when a book is purchased', () => {
         // Given
         const book = new Book('Harry Potter and the Philosophers Stone')
@@ -48,7 +48,7 @@ describe('Stocking Tests', () => {
         bookService.addPurchaseToQueue(book)
         
         // Then
-        persevereFor().atMost(10, 'SECONDS').until(() => bookRepository.getStockCountFor(book)).yieldsValue(0)
+        await persevereFor().atMost(10, 'SECONDS').until(() => bookRepository.getStockCountFor(book)).yieldsValue(0)
     })
 })
 ```
@@ -64,7 +64,7 @@ The entrypoint into the wonderful world of waiting is the `persevereFor` functio
 
 ```typescript
 // Wait for at most 30 seconds, for there to be an order from bob in the databsse
-persevereFor()
+await persevereFor()
     .atMost(30, 'SECONDS')
     .until(async () => {
         return db.query('SELECT ORDER_ID, CUSTOMER_ID FROM CUSTOMER_ORDERS');
