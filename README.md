@@ -39,8 +39,8 @@ The developer sets up the following simple test for this, thanks to `PersevereJS
 ```typescript
 import { persevereFor } from "persevere-js";
 
-describe('Stocking Tests', async () => {
-    it('should decrement stock quantity, when a book is purchased', () => {
+describe('Stocking Tests', () => {
+    it('should decrement stock quantity, when a book is purchased', async () => {
         // Given
         const book = new Book('Harry Potter and the Philosophers Stone')
         
