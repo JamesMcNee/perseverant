@@ -3,7 +3,7 @@ import {ErrorHandler, TemporalBinding, Until} from 'lib/perseverers/temporal-bin
 import {TemporalUnit} from 'lib/temporal-unit';
 import {AssertableDate} from 'lib/assertableDate';
 
-export class AtMost<T> extends TemporalBinding<T> {
+export class AtMost extends TemporalBinding {
 
     constructor(private options: {
         maxMillis: number
@@ -34,7 +34,7 @@ export class AtMost<T> extends TemporalBinding<T> {
      * Persevere until the provided promise yielding function satisfies the matching criteria (applied in next chained call).
      * @param promissoryFunction to poll
      */
-    public until(promissoryFunction: () => Promise<T>): Until<T> {
+    public until<T>(promissoryFunction: () => Promise<T>): Until<T> {
         return new AtMostUntil<T>({
             maxMillis: this.options.maxMillis,
             pollIntervalMillis: this.pollIntervalMillis,
@@ -50,7 +50,7 @@ export class AtMostUntil<T> implements Until<T> {
     constructor(private readonly options: {
         maxMillis: number
         pollIntervalMillis: number
-        errorHandler?: ErrorHandler<T>
+        errorHandler?: ErrorHandler
         testableFunc: () => Promise<T>
     }) {}
 

@@ -22,11 +22,11 @@ export interface Until<T> {
     noExceptions(): Promise<T>
 }
 
-export type ErrorHandler<T> = <E extends Error>(originalMessage: string, lastResolvedValue?: T) => E
-export abstract class TemporalBinding<T> {
+export type ErrorHandler = <E extends Error>(originalMessage: string, lastResolvedValue?: unknown) => E
+export abstract class TemporalBinding {
 
     protected pollIntervalMillis: number;
-    protected errorHandler: ErrorHandler<T>;
+    protected errorHandler: ErrorHandler;
 
     /**
      * Sets the interval to wait between polling the function to check its value / state.
@@ -44,11 +44,11 @@ export abstract class TemporalBinding<T> {
      *
      * @param handler to call to build an error, will be passed the last resolved value if available
      */
-    public withErrorHandler(handler: ErrorHandler<T>): Omit<this, 'withErrorHandler'> {
+    public withErrorHandler(handler: ErrorHandler): Omit<this, 'withErrorHandler'> {
         this.errorHandler = handler;
         return this;
 
     }
 
-    abstract until(promissoryFunction: () => Promise<T>): Until<T>;
+    abstract until<T>(promissoryFunction: () => Promise<T>): Until<T>;
 }

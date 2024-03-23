@@ -3,7 +3,7 @@ import {ErrorHandler, TemporalBinding, Until} from 'lib/perseverers/temporal-bin
 import {TemporalUnit, TemporalUnitConversion} from 'lib/temporal-unit';
 import {AssertableDate} from 'lib/assertableDate';
 
-export class AtLeast<T> {
+export class AtLeast {
 
     constructor(private options: {
         minMillis: number
@@ -17,7 +17,7 @@ export class AtLeast<T> {
      * @param unit the temporal unit that the value denotes
      * @return TemporalBinding a temporally bound class ready for further configuration
      */
-    public andAtMost(value: number, unit: TemporalUnit): TemporalBinding<T> {
+    public andAtMost(value: number, unit: TemporalUnit): TemporalBinding {
         const maxMillis = TemporalUnitConversion.asMillis(value, unit);
 
         if (maxMillis < this.options.minMillis) {
@@ -31,7 +31,7 @@ export class AtLeast<T> {
     }
 }
 
-export class AtLeastAndAtMost<T> extends TemporalBinding<T> {
+export class AtLeastAndAtMost extends TemporalBinding {
 
     constructor(private options: {
         minMillis: number,
@@ -79,7 +79,7 @@ export class UntilBetween<T> implements Until<T> {
         minMillis: number
         maxMillis: number
         pollIntervalMillis: number
-        errorHandler?: ErrorHandler<T>
+        errorHandler?: ErrorHandler
         testableFunc: () => Promise<T>
     }) {
     }

@@ -64,7 +64,7 @@ describe('AtLeast', () => {
 
             // When / Then
             await expect(async () =>
-                await new AtLeast<string>({ minMillis: 1000 }).andAtMost(2000, 'MILLISECONDS').until(() => waitableFunc()).satisfies(value => new RegExp('Hello.*').test(value))
+                await new AtLeast({ minMillis: 1000 }).andAtMost(2000, 'MILLISECONDS').until(() => waitableFunc()).satisfies(value => new RegExp('Hello.*').test(value))
             ).rejects.toThrowError('The provided function yielded the value before it was supposed to!');
         });
 
@@ -83,7 +83,7 @@ describe('AtLeast', () => {
             const passAfter = new AssertableDate().plusMillis(30);
 
             await expect(
-                new AtLeast<string>({ minMillis: 30 }).andAtMost(100, 'MILLISECONDS').withPollInterval(20, 'MILLISECONDS').until(() => waitableFunc(passAfter)).satisfies(value => new RegExp('Hello.*').test(value))
+                new AtLeast({ minMillis: 30 }).andAtMost(100, 'MILLISECONDS').withPollInterval(20, 'MILLISECONDS').until(() => waitableFunc(passAfter)).satisfies(value => new RegExp('Hello.*').test(value))
             ).resolves.toEqual(successValue);
         });
 
@@ -95,7 +95,7 @@ describe('AtLeast', () => {
 
             // When / Then
             await expect(
-                new AtLeast<string>({ minMillis: 10 }).andAtMost(20, 'MILLISECONDS').until(() => waitableFunc()).satisfies(value => new RegExp('Hello.*').test(value))
+                new AtLeast({ minMillis: 10 }).andAtMost(20, 'MILLISECONDS').until(() => waitableFunc()).satisfies(value => new RegExp('Hello.*').test(value))
             ).rejects.toThrowError('The provided function did not yield the expected value after the max allotted time (20 millis)');
         });
 
@@ -105,7 +105,7 @@ describe('AtLeast', () => {
 
             // When / Then
             await expect(
-                new AtLeast<string>({ minMillis: 10 }).andAtMost(20, 'MILLISECONDS').until(() => waitableFunc()).satisfies(value => value === 'success')
+                new AtLeast({ minMillis: 10 }).andAtMost(20, 'MILLISECONDS').until(() => waitableFunc()).satisfies(value => value === 'success')
             ).rejects.toThrowError('The provided function did not yield the expected value after the max allotted time (20 millis)');
         });
     });

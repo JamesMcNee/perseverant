@@ -64,7 +64,7 @@ describe('AtMost', () => {
 
             // When / Then
             await expect(async () =>
-                await new AtMost<string>({ maxMillis: 1000 }).until(() => waitableFunc()).satisfies(value => new RegExp('Hello.*').test(value))
+                await new AtMost({ maxMillis: 1000 }).until(() => waitableFunc()).satisfies(value => new RegExp('Hello.*').test(value))
             ).not.toThrowError();
         });
 
@@ -83,7 +83,7 @@ describe('AtMost', () => {
             const passAfter = new AssertableDate().plusMillis(1000);
 
             await expect(
-                new AtMost<string>({ maxMillis: 3000 }).withPollInterval(50, 'MILLISECONDS').until(() => waitableFunc(passAfter)).satisfies(value => new RegExp('Hello.*').test(value))
+                new AtMost({ maxMillis: 3000 }).withPollInterval(50, 'MILLISECONDS').until(() => waitableFunc(passAfter)).satisfies(value => new RegExp('Hello.*').test(value))
             ).resolves.toEqual(successValue);
         });
 
@@ -95,7 +95,7 @@ describe('AtMost', () => {
 
             // When / Then
             await expect(
-                new AtMost<string>({ maxMillis: 500 }).withPollInterval(50, 'MILLISECONDS').until(() => waitableFunc()).satisfies(value => new RegExp('Hello.*').test(value))
+                new AtMost({ maxMillis: 500 }).withPollInterval(50, 'MILLISECONDS').until(() => waitableFunc()).satisfies(value => new RegExp('Hello.*').test(value))
             ).rejects.toThrowError('The provided function did not yield the expected value within the allotted time (500 millis)');
         });
 

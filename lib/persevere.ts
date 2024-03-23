@@ -12,7 +12,7 @@ export class Persevere {
      * @param unit the temporal unit that the value denotes
      * @return TemporalBinding a temporally bound class ready for further configuration
      */
-    public atMost<T>(value: number, unit: TemporalUnit): TemporalBinding<T> {
+    public atMost(value: number, unit: TemporalUnit): TemporalBinding {
         return new AtMost({
             maxMillis: TemporalUnitConversion.asMillis(value, unit)
         });
@@ -25,7 +25,7 @@ export class Persevere {
      * @param unit the temporal unit that the value denotes
      * @return TemporalBinding a temporally bound class ready for further configuration
      */
-    public atLeast<T>(value: number, unit: TemporalUnit): AtLeast<T> {
+    public atLeast(value: number, unit: TemporalUnit): AtLeast {
         return new AtLeast({
             minMillis: TemporalUnitConversion.asMillis(value, unit)
         });
